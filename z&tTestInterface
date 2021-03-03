@@ -1,0 +1,41 @@
+import scipy.stats as st
+import numpy as np
+
+"""
+#test values
+xbar = 69
+mu = 69.4
+sd = 2.84
+n = 300
+"""
+
+##function takes standard stats hypothesis values
+
+def ztval(xbar, mu, sd, n):
+    top = xbar - mu
+    bottom = sd/(np.sqrt(n))
+    zt = top/bottom
+    dof = n-1
+
+##decides z or t  test
+
+    zort = input("population or sample standard deviation? ")
+    if zort == "population":
+        pval = st.norm.cdf(zt,dof)
+        test = "z"
+    else:
+        pval = st.t.cdf(zt,dof)
+        test = "t"
+       
+##left-tailed v right-tailed        
+       
+    direction = input("less or greater? ")
+    if direction == "greater":
+        pval = 1 - pval
+        direction = "up"
+    else:
+        direction = "down"
+
+##out
+
+    print("\nFor a " + test + "-value of " + str(round(zt,2)) + " going " + direction + "\np = " + str(round(pval,3)))
