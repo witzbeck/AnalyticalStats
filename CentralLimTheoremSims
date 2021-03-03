@@ -1,0 +1,105 @@
+import numpy as np
+from tabulate import tabulate as tab
+import math
+import matplotlib.pyplot as plot
+from scipy.stats import beta
+from scipy.stats import poisson
+
+
+
+def runsims():
+    #Initials
+    n = input("Please enter the number of simulations you'd like to run:")
+    n = int(n)
+    size = input("The size of each sample, while you're at it:")
+    size = int(size)
+    mean = input("The mean of each sample, while you're at it:")
+    mean = int(mean)
+    stdev = input("The standard deviation of each sample, while you're at it:")
+    stdev = int(stdev)
+    m = 1
+    data = list()
+
+    runningm = 0
+    runningv = 0
+
+    #Individual sample creation loop
+    while m <= n:
+        sstdev = stdev
+        smean = mean
+        ssize = size
+        sample = (sstdev)*(np.random.randn(ssize)) + smean
+        var = np.var(sample)
+        mean = np.mean(sample)
+        
+        sample_entry = ([m, round(mean, 2), round(var, 2)])
+        data.insert(m-1, sample_entry)
+        m = m + 1
+        
+        runningm = mean + runningm
+        runningv = var + runningv
+    
+    totals = ["Avg", round((runningm/n), 2), round((runningv/n), 2)]
+    data.insert(m-1, totals)
+   
+    #Table stuff
+    header = ["Simulation", "Mean", "Variance"]
+    print("\n\n" + tab(data, headers=header))
+
+###Create histogram
+    
+def runhist():
+    #Initials
+    n = input("Please enter the number of integers you'd like to generate:")
+    n = int(n)
+    lower = input("The lower bound, while you're at it:")
+    lower = int(lower)
+    upper = input("The upper bound, while you're at it:")
+    upper = int(upper)
+
+    #Stats
+    sample = np.random.randint(lower, upper, n)
+    var = np.var(sample)
+    var = round(var, 2)
+    mean = np.mean(sample)
+    mean = round(mean, 2)
+    stdev = math.sqrt(var)
+    stdev = round(stdev, 2)
+    
+    data = [[mean], [var]]
+    
+    #Table stuff
+    print("\n" + tab(data, headers=["Mean", "Variance"]) + "\n")
+    
+    #Histogram
+    plot.hist(sample, bins=int(n/2))
+    plot.ylabel("Frequency")
+    
+###Create a beta distrbution    
+    
+def runbetahist(n, a, b):
+    n = int(n)
+    a = float(a)
+    b = float(b)
+    
+    #Generate numbers
+    sample = beta.rvs(a, b, loc=0, scale=1, size=n)
+    
+    
+    #Plot histogram
+    plot.hist(sample, bins=int(n))
+    plot.ylabel("Frequency")
+
+###Create a poisson distribution
+
+def runphist(l, n):
+    n = int(n)
+    l = int(l)
+    
+     #Generate numbers
+    sample = poisson.rvs(l, loc=0, size=n)
+    
+    
+    #Plot histogram
+    plot.hist(sample, bins=int(n))
+    plot.ylabel("Probability Mass   " + "(n = " + str(n) + ")")
