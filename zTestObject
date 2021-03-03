@@ -1,0 +1,23 @@
+from scipy.stats import norm
+
+class pmaker:
+    def __init__(self, score, dir):
+        self.score = score
+        self.dir = dir
+        self.zscore = (self.score - mean)/stdev
+        self.pbelow = norm.cdf(self.zscore)
+        self.pabove = 1 - self.pbelow
+        
+a = pmaker(72, "above")
+b = pmaker(60, "below")
+cx = pmaker(89, "below")
+cy = pmaker(70, "below")
+q = [a, b, cx, cy]
+
+for x in q:
+    if x.dir == "below":
+        p = norm.cdf(x.zscore)
+    else:
+        p = 1 - norm.cdf(x.zscore)
+    print("With a mean of 80 and a stdev of 8, a score " + str(x.dir) + " " + str(x.score) + " has a probability of occuring equal to " + str(p))
+print("Additionally, the probability of any one score falling between " + str(cx.score) + " and " + str(cy.score) + " is equal to " + str(cx.pbelow - cy.pbelow))
