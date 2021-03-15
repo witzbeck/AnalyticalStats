@@ -1,0 +1,88 @@
+import pandas as pd
+import statsmodels.formula.api as smf
+#import matplotlib.pyplot as plt (used to check residuals visually)
+#import seaborn as sb (used for initial correlation visual)
+
+train = pd.read_csv("/Users/Fr333y3d3a/Documents/School/DataPersonalPursuit/Titanic/train.csv")
+
+#Pop perceived irrelevant columns
+name = train.pop("Name")
+ticket = train.pop("Ticket")
+cabin = train.pop("Cabin")
+
+"""
+#Initial visual
+t = sb.PairGrid(tite)
+t.map(sb.scatterplot)
+"""
+
+#Cleaning and proper dtypes
+train[["Pclass","Sex","Embarked"]] = train[["Pclass","Sex","Embarked"]].astype("category")
+
+#Regression stats
+model = smf.ols("Survived ~ Pclass + Sex + Age + SibSp", data= train)
+res = model.fit()
+print(res.summary())
+
+sid = train["Survived"] - res.fittedvalues
+
+#plt.scatter(tite["PassengerId"], sid)
+#plt.hist(sid,bins=50)
+
+##Parch is least predictive- will be dropped
+##Fare not predictive - DW value explained by fare correlating with class, perhaps
+
+def deadoralive(p):
+    if p >= 0.5:
+        return 1
+    else:
+        return 0
+    
+def my_model(pclass,sex,age,sibsp):
+    intercept = 1.1968
+    
+    #Passenger Class = Pclass [1,2,3]
+    if pclass == "1":
+        pclass = 0
+    elif pclass == "2":
+        pclass = -0.2182
+    else:
+        pclass = -0.4870
+        
+    #Sex
+    if sex == "female":
+        sex = 0
+    else:
+        sex = -0.4870
+        
+    #Age
+    age = (-0.0066)*age
+    
+    #SibSp
+    sibsp = (-0.0549)*sibsp
+    
+    fatality = intercept + pclass + sex + age + sibsp
+    return deadoralive(fatality)
+
+#Import test data
+test = pd.read_csv("/Users/Fr333y3d3a/Documents/School/DataPersonalPursuit/Titanic/test.csv")
+test[["Pclass","Sex","Embarked"]] = test[["Pclass","Sex","Embarked"]].astype("category")
+
+#build test data function
+results = list()
+results.clear()
+for i in range(418):
+    pclass = test.iloc[i][1]
+    sex = test.iloc[i][3]
+    age = test.iloc[i][4]
+    sibsp = test.iloc[i][5]
+    results.append(my_model(pclass, sex, age, sibsp))
+
+#create submission file
+beck_sub = test["PassengerId"]
+results = pd.Series(results,name="Survived")
+beck_sub = pd.concat([beck_sub,results], axis = 1,)
+beck_sub.to_csv("/Users/Fr333y3d3a/Documents/School/DataPersonalPursuit/Titanic/beck_sub.csv",index=False)
+
+#Accuracy ~ .68
+#Next time will do logistic regression etc
