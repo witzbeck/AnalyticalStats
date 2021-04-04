@@ -1,0 +1,104 @@
+##Imports
+import pandas as pd
+#import numpy as np
+
+titanic = pd.read_csv("/Users/Fr333y3d3a/Documents/School/952986478/DATA822 - Data Mining and Predictive Analytics/Module 1/titanic_1.csv")
+##Cleaning data
+#Drop irrelevant columns
+titanic.drop(["name","ticket","boat","cabin","body","home_dest"], axis=1)
+
+#Fixing mixing values by replacing NAs with medians by class, then drop extra nas
+titanic["age"].fillna(titanic.groupby("pclass")["age"].transform("median"), inplace = True)
+titanic["fare"].fillna(titanic.groupby("pclass")["fare"].transform("mean"), inplace = True)
+
+#Changing variables to 10 float
+titanic.loc[(titanic["sex"] == "male"), "sex"] = 1
+titanic.loc[(titanic["sex"] == "female"), "sex"] = 0
+titanic[["sex"]] = titanic[["sex"]].astype("float")
+
+titanic.loc[(titanic["embarked"] == "S"), "embarked"] = 0
+titanic.loc[(titanic["embarked"] == "C"), "embarked"] = 1
+titanic.loc[(titanic["embarked"] == "Q"), "embarked"] = 2
+titanic[["embarked"]] = titanic[["embarked"]].astype("float")
+titanic["embarked"].fillna(titanic.groupby("pclass")["embarked"].transform("median"), inplace = True)
+
+##Arranging for model
+from sklearn.model_selection import train_test_split
+
+X = titanic[["pclass", "sex", "age", "sibsp", "parch", "fare", "embarked"]]
+
+y = titanic[["survived"]]
+X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=.3,random_state = 1000)
+
+##Import and build tree
+from sklearn import tree
+i = 4
+boat = tree.DecisionTreeClassifier(max_depth=i, min_samples_leaf=1)
+boat1 = boat.fit(X_train,y_train)
+
+print("With a max_depth of ",str(i),":")
+print("The score for the training data is: ", boat.score(X_train,y_train))
+print("The score for the testing data is: ", boat.score(X_test,y_test))
+
+from matplotlib import pyplot as plt
+fig = plt.figure(figsize=(20,25))
+
+import graphviz
+# DOT data
+dot_data = tree.export_graphviz(boat, 
+                                feature_names=["pclass", "sex", "age", "sibsp", "parch", "fare", "embarked"],  
+                                class_names=["died","survived"],
+                                filled=True,
+                                rounded=True,
+                                special_characters=True)
+
+# Draw graph
+graph = graphviz.Source(dot_data) 
+graph
+
+###Test Train Table calc
+rstt_list = []
+trl = len(X_train)
+tel = len(X_test)
+weighted_l = []
+
+def ttt(p): #tests trees, analyzes, and outputs optimal parameters and rationale
+    #Clear lists
+    rstt_list.clear()
+    r = 0
+    sl = [1,5,10,15,20,25]
+    
+    #Loop trees
+    for r in range(2,p+1):
+        for s in sl:
+            boats = tree.DecisionTreeClassifier(max_depth = r, min_samples_leaf = s)
+            boats = boats.fit(X_train,y_train)
+            
+            #List'em
+            rstt_list.append([r,s,round(boats.score(X_train,y_train),4),round(boats.score(X_test,y_test),4)])
+    
+    df = pd.DataFrame(data=rstt_list,columns=["Max Depth","Min Leaf Size","Train Result", "Test Result"])
+    print(df)
+    
+    ##Results analysis
+    test_c = df["Test Result"]
+    train_c = df["Train Result"]
+    i = 0
+    weighted_l.clear()
+    while i <= len(rstt_list)-1:
+        avg = (test_c[i]*trl+train_c[i]*tel)/(tel+trl)
+        weighted_l.append(avg)
+        i = i + 1
+        
+    weighted_l2 = weighted_l.copy()
+    weighted_l2.sort()
+    w_mx = weighted_l2[-1]
+    w_idx = weighted_l.index(w_mx)
+    print(w_mx,w_idx)
+    
+    dm = df["Max Depth"][w_idx]
+    lm = df["Min Leaf Size"][w_idx]
+        
+    
+    print("I would choose the tree with a Max Depth of ",dm," and a Min Leaf Size of ",lm," because it leads to the maximum inverse weighted test/training average of ",w_mx,)
+    print("I created a method to assess the weighted average of test/training results per tree, but reversed the weights so that the testing results were favored 7:3 over the training results. I wanted to include both because all of the results are valid, but wanted to prioritize unseen data proportionally to the original split.")
