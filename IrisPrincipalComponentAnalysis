@@ -1,0 +1,61 @@
+##1 Importing dataset
+import seaborn as sns
+import pandas as pd
+
+data = sns.load_dataset('iris')
+iris = data.values
+
+iris_q = pd.DataFrame(iris)
+iris_q = iris_q.drop([4], axis=1)
+
+##Import decomp tools
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
+pca = PCA(n_components = 2)
+iris_pca = pca.fit_transform(iris_q)
+
+print("First component variance: ",pca.explained_variance_[0])
+print("Second component variance: ",pca.explained_variance_[1])
+part_var = sum(pca.explained_variance_)
+print("Total component variance: ",part_var)
+tot_var = sum(iris_q.var(axis=0))
+print("Original variance: ",tot_var,"\n")
+
+##2 Retained variance
+print("The percentage of variance retained after performing principal component analysis is: ", (round(part_var/tot_var,4))*100,"%")
+
+##3 Plot
+ir1 = iris_pca[:,0]
+ir2 = iris_pca[:,1]
+irl = iris[:,4]
+
+ir_sp = pd.DataFrame([ir1,ir2,irl])
+ir_sp = ir_sp.T
+ir_sp.columns = ["a","b","species"]
+
+
+setosa = ir_sp[ir_sp["species"]=='setosa']
+s1 = setosa["a"]
+s2 = setosa["b"]
+versicolor = ir_sp[ir_sp["species"]=='versicolor']
+vc1 = versicolor["a"]
+vc2 = versicolor["b"]
+virginica = ir_sp[ir_sp["species"]=='virginica']
+vg1 = virginica["a"]
+vg2 = virginica["b"]
+
+"""
+colors = {'setosa':'blue','versicolor':'green','virginica':'orange'}
+plt.scatter(ir_sp["a"],ir_sp["b"],c=ir_sp["species"].apply(lambda x: colors[x]))
+"""
+
+fig, ax = plt.subplots()
+ax.scatter(s1,s2,color='blue',label='Setosa')
+ax.scatter(vc1,vc2,color='green',label='Versicolor')
+ax.scatter(vg1,vg2,color='orange',label='Virginica')
+plt.legend()
+plt.xlabel('Pricipal Component 1')
+plt.ylabel('Pricipal Component 2')
+
+plt.show()
